@@ -1,37 +1,54 @@
+#Instalamos las librerias necesarias
+import matplotlib.pyplot as plt
 import pandas as pd
-#panda es el lenguaje que te permite transformar datos
+import seaborn as sns 
 
+# Código de prueba para verificar que todo está correcto
+print("¡Librerías importadas con éxito!")
+print(f"Versión de Pandas: {pd.__version__}")
+print(f"Versión de Seaborn: {sns.__version__}")
 
-#importa csv
-#df=pd.read_csv('Top5_League_Players_2017to2024_dataset.csv')
+#Cargar los datos
+df = pd.read_csv("Top5_League_Players_2017to2024_dataset.csv", sep=';')
 
-# importa csv
-df = pd.read_csv(
-    'Top5_League_Players_2017to2024_dataset.csv',
-    sep=';'
-)
-
-
-print("OKEY! Archivo cargado correctamente")
-
-#muestra las primeras filas del dataframe
-print(df.head())
-
-#filtrando por año 2022
-#resultado = df[df['year'] == 2022]
-#total_equipo = df['Playing Time_Starts'].count()
-#print(f"total de equipos registrados son: {total_equipo}\n")
-
-#mostrando resultado
-#print(resultado)
-
-print("--- Analisis Avanzados de datos ---")
-
-filtro_avanzado = df['player'].str.startswith('Alex', na = False)
+#Logica de filtrado
+filtro_avanzado = df["pos_"].str.startswith("DF", na=False)
 df_filtrado = df[filtro_avanzado]
+suma_dinero = df_filtrado["Performance_Gls"].sum()
 
-sumo_dinero = df_filtrado['trade_value_usd_millions'].sum()
-print("--- Reporte FInanciero Automatizado ---")
-print(f"Monto total analizado: USD {sumo_dinero: .2f} millones.\n")
+print("---- Repprte Automatizado ----")
+print(f"Monto analizado: USD {suma_dinero: .2f} millones")
 
-filtro_numero = df('trade_value_usd_millions') > 500
+#Condicional
+if Default_limite_alto := (suma_dinero > 150):
+    print("¡Alerta! El monto total supera el limite establecido.")
+    print("Requiere revision inmediata")
+elif suma_dinero < 100:
+    print("Aviso: mercado moderado/alto")
+    print("Monitorear comportamiento prox tris")
+else:
+    print("Mercado estable, sin alertas por el momento.")
+
+#-------------------------------------------------------------
+#Grafico de barras usando toda DF
+#-------------------------------------------------------------
+print("\n[Generando GRAFICO de Barras]")
+sns.set_theme(style="whitegrid")
+plt.figure(figsize=(10,6))
+sns.barplot(
+    data=df,
+    x="pos_",
+    y="Performance_Gls",
+    estimator=sum,
+    errorbar=None,
+    palette="viridis",
+
+)
+plt.title("Comparativa de Mercado por tipo de Hardware", fontsize=14)
+plt.xticks(rotation=90)
+
+#Guardando grafico generado
+plt.savefig("grafico_barra.png", dpi=300)
+plt.close()
+
+print("\n¡Hecho! los graficos se guardaron correctamente en tu carpeta")
