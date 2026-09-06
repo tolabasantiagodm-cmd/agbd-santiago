@@ -1,0 +1,440 @@
+from sqlalchemy import Column, Integer, String, Boolean, Numeric, create_engine, desc, or_
+from sqlalchemy.orm import DeclarativeBase, Session
+
+
+# Definimos la clase Base
+class Base(DeclarativeBase):
+    pass
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 1) Definimos el modelo Producto
+class Producto(Base):
+    __tablename__ = "productos"
+
+    id = Column(Integer, primary_key=True, autoincrement=True) 
+    nombre = Column(String)
+    categoria = Column(String)
+    precio = Column(Numeric(10, 2))
+    stock = Column(Integer)
+    activo = Column(Boolean, default=True)
+
+
+# Creamos el engine utilizando SQLite
+engine = create_engine("sqlite:///mi_app.db")
+
+
+# Creamos las tablas en la base de datos
+Base.metadata.create_all(engine)
+
+print("----------------------------------------")
+print("1) Tabla productos creada correctamente:")
+print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 2) Insertamos los 10 productos
+with Session(engine) as session:
+
+    productos = [
+        Producto(
+            nombre="Teclado mecanico",
+            categoria="perifericos",
+            precio=8500,
+            stock=15
+        ),
+        Producto(
+            nombre="Mouse inalambrico",
+            categoria="perifericos",
+            precio=4200,
+            stock=30
+        ),
+        Producto(
+            nombre="Monitor 24 pulgadas",
+            categoria="monitores",
+            precio=62000,
+            stock=8
+        ),
+        Producto(
+            nombre="Auriculares bluetooth",
+            categoria="audio",
+            precio=12300,
+            stock=20
+        ),
+        Producto(
+            nombre="Webcam Full HD",
+            categoria="perifericos",
+            precio=9800,
+            stock=12
+        ),
+        Producto(
+            nombre="SSD 1TB",
+            categoria="almacenamiento",
+            precio=18500,
+            stock=25
+        ),
+        Producto(
+            nombre="RAM 16GB",
+            categoria="componentes",
+            precio=15600,
+            stock=18
+        ),
+        Producto(
+            nombre="Mousepad XL",
+            categoria="perifericos",
+            precio=2100,
+            stock=40
+        ),
+        Producto(
+            nombre="Hub USB-C",
+            categoria="accesorios",
+            precio=5400,
+            stock=6,
+            activo=False
+        ),
+        Producto(
+            nombre="Cable HDMI",
+            categoria="accesorios",
+            precio=1800,
+            stock=50
+        )
+    ]
+
+    # Añadimos los productos
+    session.add_all(productos)
+
+    # Guardamos los cambios
+    session.commit()
+
+    # Comprobamos que hay 10 productos
+    cantidad = session.query(Producto).count()
+
+    print("----------------------------------------")
+    print("2) Cantidad de productos:", cantidad)
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 3) Consultar productos de la categoría "perifericos"
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.categoria == "perifericos") \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("3) Categoria perifericos:", producto.nombre, producto.precio)
+        print("----------------------------------------")
+
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 4) Traemos los productos cuyo precio mayor a $10000 y de mayor e menor(precio)
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.precio > 10000) \
+                       .order_by(desc(Producto.precio)) \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("4) Prodctos mayor 100000 y de mayor a menor:", producto.nombre, producto.precio)
+        print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 5) Trameos los productos con stock menor o igual a 12 (activos)
+
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.stock <= 12) \
+                       .filter(Producto.activo == True) \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("5) Productos con stock menor o igual a 12 (activos):", producto.nombre, producto.stock)
+        print("----------------------------------------")
+
+# Porque la consulta tiene dos condiciones y el Hub USB-C solo cumple una.
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 6) Traemos los productos (precio) entre 5000 y 20000
+
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.precio >= 5000) \
+                       .filter(Producto.precio <= 20000) \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("6) Productos entre 5000 y 20000:", producto.nombre, producto.precio)
+        print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 7) Traemos el producto mas caro de toda la tabla
+
+with Session(engine) as session:
+    producto = session.query(Producto) \
+                      .order_by(Producto.precio.desc()) \
+                      .first()
+    print("----------------------------------------")
+    print("7) Producto ams caro de toda la tabla:", producto.nombre, producto.precio)
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 8) Filtramos productos que esten inactivos
+
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.activo == False) \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("8) Productos inactivos:", producto.nombre, producto.precio, producto.activo)
+        print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 9) Traemos productos de la categoria audio y componentes
+
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(
+                           or_(
+                               Producto.categoria == "audio",
+                               Producto.categoria == "componentes"
+                           )
+                       ) \
+                       .all()
+
+    for producto in productos:
+        print("----------------------------------------")
+        print("9) Prodctos de la categoria audio y componentes:", producto.nombre, producto.categoria)
+        print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 10) Traemos productos que tienen la letra "a"
+
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.nombre.contains("a")) \
+                       .all()
+
+    for producto in productos:
+        print(producto.nombre)
+
+    print("----------------------------------------")    
+    print("10) Productos que tienen la letra 'a':", len(productos))
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 11) Traemos los productos que empiezen con "M"
+with Session(engine) as session:
+    productos = session.query(Producto) \
+                       .filter(Producto.nombre.startswith("M")) \
+                       .all()
+
+    for producto in productos:
+        print(producto.nombre)
+
+    print("----------------------------------------")
+    print("11) Prodctos que empiezen con la letra 'M':", len(productos))
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 12) Traemos productos con categoria y precio NULL
+
+with Session(engine) as session:
+
+    producto_sin_datos = Producto(
+        nombre="Producto sin datos",
+        categoria=None,
+        precio=None,
+        stock=0
+    )
+
+    session.add(producto_sin_datos)
+    session.commit()
+
+    # Buscamos productos con categoria NULL
+    productos = session.query(Producto) \
+                       .filter(Producto.categoria == None) \
+                       .all()
+    
+    print("----------------------------------------")
+    print("12) Productos con categoria NULL:")
+    print("----------------------------------------")
+
+    for producto in productos:
+        print(producto.nombre, producto.categoria, producto.precio)
+
+    # Buscamos productos con precio NULL
+    productos = session.query(Producto) \
+                       .filter(Producto.precio == None) \
+                       .all()
+
+    print("----------------------------------------")
+    print("12) Productos con precio NULL:")
+    print("----------------------------------------")
+
+    for producto in productos:
+        print(producto.nombre, producto.categoria, producto.precio)
+
+# Si aparece el mismo producto porque producto sin datos tiene tanto la categoria como el precio en NULL.
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 13) Buscamos el Hub USB-C por id y actualizamos sus datos
+
+with Session(engine) as session:
+
+    # Buscamos el producto por su id
+    producto = session.get(Producto, 9)
+
+    # Actualizamos stock y activo
+    producto.stock = 20
+    producto.activo = True
+
+    # Guardamos los cambios
+    session.commit()
+
+
+# Verificamos que los cambios se guardaron
+with Session(engine) as session:
+
+    producto = session.query(Producto) \
+                       .filter(Producto.id == 9) \
+                       .first()
+    
+    print("----------------------------------------")
+    print("13) Nombre del producto:", producto.nombre)
+    print("Stock:", producto.stock)
+    print("Activo:", producto.activo)
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 14) Aumentamos un 10% el precio de los productos de "perifericos"
+
+from decimal import Decimal
+
+with Session(engine) as session:
+
+    productos = session.query(Producto) \
+                       .filter(Producto.categoria == "perifericos") \
+                       .all()
+
+    for producto in productos:
+        producto.precio = producto.precio * Decimal("1.10")
+
+    # Un solo commit al final
+    session.commit()
+
+    print("----------------------------------------")
+    print("14)")
+    
+    # Verificamos los precios
+    for producto in productos:
+        print("Nombre del producto:", producto.nombre)
+        print("Nuevo precio(10%):", producto.precio)
+        print("----------------------------------------")
+
+# El teclado después del aumento cuesta 9350.00
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 15) Eliminamos el Cable HDMI de la base de datos.
+
+with Session(engine) as session:
+
+    producto = session.get(Producto, 10)
+
+    session.delete(producto)
+
+    session.commit()
+
+    cantidad = session.query(Producto).count()
+
+    print("----------------------------------------")
+    print("15) Cantidad de productos:", cantidad)
+    print("----------------------------------------")
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+# 16) Eliminamos productos que tengan precio menor a 2000 o inactivos
+
+with Session(engine) as session:
+
+    productos = session.query(Producto) \
+                       .filter(
+                           or_(
+                               Producto.precio < 2000,
+                               Producto.activo == False
+                           )
+                       ) \
+                       .all()
+
+    cantidad_borrados = len(productos)
+
+    for producto in productos:
+        print("Eliminando:", producto.nombre)
+        session.delete(producto)
+
+    session.commit()
+
+    print("----------------------------------------")
+    print("16) Productos eliminados:", cantidad_borrados)
+    print("----------------------------------------")
+
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+
+with Session(engine) as session:
+
+    productos = session.query(Producto) \
+                       .filter(Producto.nombre.contains("USB")) \
+                       .all()
+
+    print("----------------------------------------")
+
+    for producto in productos:
+        print("Productos que contienen 'USB':", producto.nombre)
+        print("----------------------------------------")
+
+
+
+
+
+
+
+
+
+
+
+
