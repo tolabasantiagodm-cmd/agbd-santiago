@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="Libreria.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1791"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="Autores" custom_title="0" dock_id="1" table="4,7:mainAutores"/><dock_state state="000000ff00000000fd0000000100000002000003910000026afc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000003910000011e00ffffff000002690000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Autores" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="53"/><column index="2" value="87"/><column index="3" value="119"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">
+-- 1. Tabla Autores
+CREATE TABLE Autores (
+    AutorID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    Apellido TEXT NOT NULL
+);
+
+-- 2. Tabla Libros
+CREATE TABLE Libros (
+    LibroID INTEGER PRIMARY KEY AUTOINCREMENT,
+    AutorID INTEGER NOT NULL,
+    Titulo TEXT NOT NULL,
+    Precio REAL NOT NULL,
+    Stock INTEGER NOT NULL,
+    FOREIGN KEY (AutorID) REFERENCES Autores(AutorID)
+);
+
+-- 3. Tabla Clientes
+CREATE TABLE Clientes (
+    ClienteID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    Apellido TEXT NOT NULL,
+    Email TEXT
+);
+
+-- 4. Tabla Empleados
+CREATE TABLE Empleados (
+    EmpleadoID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Nombre TEXT NOT NULL,
+    Apellido TEXT NOT NULL
+);
+
+-- 5. Tabla Ventas
+CREATE TABLE Ventas (
+    VentaID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ClienteID INTEGER NOT NULL,
+    EmpleadoID INTEGER NOT NULL,
+    Fecha TEXT NOT NULL,
+    FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID),
+    FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID)
+);
+
+-- 6. Tabla DetalleVenta
+CREATE TABLE DetalleVenta (
+    DetalleID INTEGER PRIMARY KEY AUTOINCREMENT,
+    VentaID INTEGER NOT NULL,
+    LibroID INTEGER NOT NULL,
+    Cantidad INTEGER NOT NULL,
+    PrecioUnitario REAL NOT NULL,
+    FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID),
+    FOREIGN KEY (LibroID) REFERENCES Libros(LibroID)
+);
+</sql><sql name="SQL 2*">-- Autores
+INSERT INTO Autores (Nombre, Apellido) VALUES
+('Gabriel', 'Garcia Marquez'),
+('Jorge Luis', 'Borges'),
+('Julio', 'Cortazar');
+
+-- Libros
+INSERT INTO Libros (AutorID, Titulo, Precio, Stock) VALUES
+(1, 'Cien años de soledad', 15000, 10),
+(2, 'Ficciones', 12000, 8),
+(3, 'Rayuela', 18000, 5);
+
+-- Clientes
+INSERT INTO Clientes (Nombre, Apellido, Email) VALUES
+('Laura', 'Gomez', 'laura@gmail.com'),
+('Martin', 'Perez', 'martin@gmail.com');
+
+-- Empleados
+INSERT INTO Empleados (Nombre, Apellido) VALUES
+('Ana', 'Lopez'),
+('Carlos', 'Diaz');</sql><sql name="SQL 3*">-- Activar las claves foráneas
+PRAGMA foreign_keys = ON;
+
+-- Registrar ventas
+INSERT INTO Ventas (ClienteID, EmpleadoID, Fecha) VALUES
+(1, 1, '2026-11-23'),
+(2, 2, '2026-11-23');
+
+-- Agregar los libros vendidos
+INSERT INTO DetalleVenta (VentaID, LibroID, Cantidad, PrecioUnitario) VALUES
+(1, 1, 2, 15000),
+(1, 2, 1, 12000),
+(2, 3, 1, 18000);</sql><sql name="SQL 4*">SELECT
+    Ventas.VentaID,
+    Ventas.Fecha,
+    Clientes.Nombre || ' ' || Clientes.Apellido AS Cliente,
+    Empleados.Nombre || ' ' || Empleados.Apellido AS Empleado,
+    Libros.Titulo AS Libro,
+    DetalleVenta.Cantidad,
+    DetalleVenta.PrecioUnitario,
+    DetalleVenta.Cantidad * DetalleVenta.PrecioUnitario AS Subtotal
+FROM Ventas
+INNER JOIN Clientes
+    ON Ventas.ClienteID = Clientes.ClienteID
+INNER JOIN Empleados
+    ON Ventas.EmpleadoID = Empleados.EmpleadoID
+INNER JOIN DetalleVenta
+    ON Ventas.VentaID = DetalleVenta.VentaID
+INNER JOIN Libros
+    ON DetalleVenta.LibroID = Libros.LibroID;</sql><sql name="SQL 5*">SELECT
+    Libros.LibroID,
+    Libros.Titulo,
+    Autores.Nombre || ' ' || Autores.Apellido AS Autor,
+    Libros.Precio,
+    Libros.Stock
+FROM Libros
+INNER JOIN Autores
+    ON Libros.AutorID = Autores.AutorID
+ORDER BY Libros.Titulo;</sql><sql name="SQL 6*">SELECT * FROM Libros;</sql><sql name="SQL 7*">-- Crear un cliente de prueba
+INSERT INTO Clientes (Nombre, Apellido, Email)
+VALUES ('Cliente', 'Prueba', 'prueba@gmail.com');
+
+-- Eliminar ese cliente
+DELETE FROM Clientes
+WHERE Email = 'prueba@gmail.com';</sql><sql name="SQL 8*">SELECT
+    Clientes.ClienteID,
+    Clientes.Nombre,
+    Clientes.Apellido,
+    Ventas.VentaID,
+    Ventas.Fecha
+FROM Clientes
+LEFT JOIN Ventas
+    ON Clientes.ClienteID = Ventas.ClienteID;</sql><current_tab id="7"/></tab_sql></sqlb_project>
